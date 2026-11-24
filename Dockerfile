@@ -7,5 +7,5 @@ RUN CGO_ENABLED=0 go build -o /app/server .
 
 FROM alpine:3
 COPY --from=build /app/server /server
-EXPOSE 50051
+EXPOSE 50052
 ENTRYPOINT ["/server"]
