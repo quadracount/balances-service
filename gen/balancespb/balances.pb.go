@@ -333,12 +333,17 @@ func (x *MemberBalanceRequest) GetUserId() string {
 	return ""
 }
 
+// from_name y to_name los envía el BFF (los saca del grupo ya verificado en
+// groups-service), porque balances-service no conoce los nombres y el evento
+// pago.registrado los necesita.
 type RegisterPaymentRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	GroupId       string                 `protobuf:"bytes,1,opt,name=group_id,json=groupId,proto3" json:"group_id,omitempty"`
 	FromUserId    string                 `protobuf:"bytes,2,opt,name=from_user_id,json=fromUserId,proto3" json:"from_user_id,omitempty"`
 	ToUserId      string                 `protobuf:"bytes,3,opt,name=to_user_id,json=toUserId,proto3" json:"to_user_id,omitempty"`
 	Amount        int64                  `protobuf:"varint,4,opt,name=amount,proto3" json:"amount,omitempty"`
+	FromName      string                 `protobuf:"bytes,5,opt,name=from_name,json=fromName,proto3" json:"from_name,omitempty"`
+	ToName        string                 `protobuf:"bytes,6,opt,name=to_name,json=toName,proto3" json:"to_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -399,6 +404,20 @@ func (x *RegisterPaymentRequest) GetAmount() int64 {
 		return x.Amount
 	}
 	return 0
+}
+
+func (x *RegisterPaymentRequest) GetFromName() string {
+	if x != nil {
+		return x.FromName
+	}
+	return ""
+}
+
+func (x *RegisterPaymentRequest) GetToName() string {
+	if x != nil {
+		return x.ToName
+	}
+	return ""
 }
 
 type Payment struct {
@@ -509,14 +528,16 @@ const file_balances_proto_rawDesc = "" +
 	"\ttransfers\x18\x02 \x03(\v2\x12.balances.TransferR\ttransfers\"J\n" +
 	"\x14MemberBalanceRequest\x12\x19\n" +
 	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12\x17\n" +
-	"\auser_id\x18\x02 \x01(\tR\x06userId\"\x8b\x01\n" +
+	"\auser_id\x18\x02 \x01(\tR\x06userId\"\xc1\x01\n" +
 	"\x16RegisterPaymentRequest\x12\x19\n" +
 	"\bgroup_id\x18\x01 \x01(\tR\agroupId\x12 \n" +
 	"\ffrom_user_id\x18\x02 \x01(\tR\n" +
 	"fromUserId\x12\x1c\n" +
 	"\n" +
 	"to_user_id\x18\x03 \x01(\tR\btoUserId\x12\x16\n" +
-	"\x06amount\x18\x04 \x01(\x03R\x06amount\"\xab\x01\n" +
+	"\x06amount\x18\x04 \x01(\x03R\x06amount\x12\x1b\n" +
+	"\tfrom_name\x18\x05 \x01(\tR\bfromName\x12\x17\n" +
+	"\ato_name\x18\x06 \x01(\tR\x06toName\"\xab\x01\n" +
 	"\aPayment\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
 	"\bgroup_id\x18\x02 \x01(\tR\agroupId\x12 \n" +
