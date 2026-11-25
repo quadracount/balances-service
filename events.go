@@ -61,13 +61,7 @@ func consumeOnce(ctx context.Context, url string, store *Store) error {
 	}
 	defer ch.Close()
 
-	if err := ch.ExchangeDeclare(eventsExchange, "topic", true, false, false, false, nil); err != nil {
-		return err
-	}
-	if _, err := ch.QueueDeclare(eventsQueue, true, false, false, false, nil); err != nil {
-		return err
-	}
-	if err := ch.QueueBind(eventsQueue, expenseCreated, eventsExchange, false, nil); err != nil {
+	if err := declareTopology(ch); err != nil {
 		return err
 	}
 	if err := ch.Qos(10, 0, false); err != nil {

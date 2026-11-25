@@ -88,6 +88,25 @@ func TestPlanVacioSiTodosEstanAlDia(t *testing.T) {
 	}
 }
 
+func TestValidatePayment(t *testing.T) {
+	if err := ValidatePayment(diego, martin, 10000); err != nil {
+		t.Fatalf("pago válido rechazado: %v", err)
+	}
+	for _, c := range []struct {
+		from, to string
+		amount   int64
+	}{
+		{diego, diego, 1000}, // a sí mismo
+		{diego, martin, 0},
+		{diego, martin, -5},
+		{"", martin, 1000},
+	} {
+		if ValidatePayment(c.from, c.to, c.amount) == nil {
+			t.Fatalf("se esperaba un error para %+v", c)
+		}
+	}
+}
+
 func TestGastoConPartesQueNoSuman(t *testing.T) {
 	if _, err := ExpenseDeltas(martin, 1000, []Share{{martin, 500}}); err == nil {
 		t.Fatal("se esperaba un error")

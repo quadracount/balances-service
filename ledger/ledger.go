@@ -44,6 +44,20 @@ func ExpenseDeltas(paidBy string, amount int64, shares []Share) (map[string]int6
 	return deltas, nil
 }
 
+// ValidatePayment revisa un pago entre dos miembros.
+func ValidatePayment(from, to string, amount int64) error {
+	if from == "" || to == "" {
+		return errors.New("faltan quien paga o quien recibe")
+	}
+	if from == to {
+		return errors.New("quien paga y quien recibe tienen que ser personas distintas")
+	}
+	if amount <= 0 {
+		return errors.New("el monto debe ser mayor que 0")
+	}
+	return nil
+}
+
 // PaymentDeltas: quien paga queda con más saldo a favor y quien recibe, con menos.
 func PaymentDeltas(from, to string, amount int64) map[string]int64 {
 	return map[string]int64{from: amount, to: -amount}

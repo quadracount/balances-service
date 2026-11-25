@@ -36,7 +36,9 @@ func main() {
 	defer func() { _ = mongoClient.Disconnect(context.Background()) }()
 	store := NewStore(mongoClient.Database(env("MONGO_DB", "balances_db")))
 
-	go ConsumeEvents(ctx, env("RABBITMQ_URL", "amqp://localhost:5672"), store)
+	rabbitURL := env("RABBITMQ_URL", "amqp://localhost:5672")
+	go ConsumeEvents(ctx, rabbitURL, store)
+	publisher := NewPublisher(ctx, rabbitURL)
 
 	addr := ":" + env("GRPC_PORT", "50052")
 	lis, err := net.Listen("tcp", addr)
@@ -44,7 +46,7 @@ func main() {
 		log.Fatalf("escuchando en %s: %v", addr, err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterBalancesServiceServer(grpcServer, &server{store: store})
+	pb.RegisterBalancesServiceServer(grpcServer, &server{store: store, publisher: publisher})
 
 	// grpc.health.v1, para los probes gRPC de Kubernetes
 	healthServer := health.NewServer()

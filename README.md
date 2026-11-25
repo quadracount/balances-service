@@ -16,7 +16,7 @@ diff balances-service/protos/balances.proto groups-service/protos/balances.proto
 
 - `GetGroupBalances` y `GetSettlementPlan`: los usa el BFF.
 - `GetMemberBalance`: lo usa groups-service antes de quitar a un miembro.
-- `RegisterPayment`: lo usa el BFF. **Pendiente (Fase 4)**, por ahora responde `UNIMPLEMENTED`. Recibe también `from_name` y `to_name`: balances no conoce los nombres de los miembros y los necesita para el evento `pago.registrado`. El BFF los saca del grupo que ya verificó groups-service.
+- `RegisterPayment`: lo usa el BFF (y groups-service para el pago de los datos de ejemplo). Guarda el pago en `payments`, lo aplica a los saldos una sola vez (usa el id del pago en `processed_events`) y publica `pago.registrado`. Recibe también `from_name` y `to_name`: balances no conoce los nombres de los miembros y los necesita para el evento `pago.registrado`. El BFF los saca del grupo que ya verificó groups-service.
 
 También expone `grpc.health.v1` para los probes de Kubernetes.
 
@@ -48,7 +48,9 @@ Consume `gasto.creado` desde la cola `balances.events`:
 
 Antes de aplicarlo se guarda el `event_id` en `processed_events`. Si ya estaba, se ignora, así un mensaje repetido no altera los saldos. Si después falla el `$inc`, se borra ese registro y el mensaje vuelve a la cola. El `ack` se hace después de procesar. Un evento mal formado (o cuyas partes no suman el total) se descarta.
 
-Publica `pago.registrado` con `payment_id`, `from_user_id`, `from_name`, `to_user_id`, `to_name` y `amount` (los nombres vienen en `RegisterPaymentRequest`).
+Publica `pago.registrado` con `payment_id`, `from_user_id`, `from_name`, `to_user_id`, `to_name` y `amount` (los nombres vienen en `RegisterPaymentRequest`). El evento se envía en segundo plano (`publisher.go`): si RabbitMQ está caído, se reintenta cada 3 s y la respuesta gRPC no espera.
+
+Quien publica también declara las colas de los consumidores (`balances.events` ← `gasto.creado` y `activity.events` ← `#`). Un evento que llega a un exchange sin colas enlazadas se descarta, así que las colas tienen que existir antes del primer evento, aunque el consumidor todavía no haya arrancado (pasa al desplegar todo a la vez).
 
 ## Tests
 
